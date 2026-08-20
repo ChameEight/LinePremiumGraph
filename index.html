@@ -2191,12 +2191,34 @@
 
             const csvString = Papa.unparse(rows);
             const blob = new Blob(["\uFEFF" + csvString], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
+            
+            // ファイル名の生成
             const { item, sales } = getRankingFilterLabel(itemTypeFilter, salesTypeFilter);
-            const fileName = `プレミアム入り月別商品ランキング_${isCountMode ? '個数_' : ''}${String(premiumMonth).replace('/','').slice(2)}_${String(startMonth).replace('/','').slice(2)}-${String(endMonth).replace('/','').slice(2)}_${item}_${sales}.csv`;
+            let fileName = `プレミアム入り月別商品ランキング_${isCountMode ? '個数_' : ''}${String(premiumMonth).replace('/','').slice(2)}_${String(startMonth).replace('/','').slice(2)}-${String(endMonth).replace('/','').slice(2)}_${item}_${sales}.csv`;
+            fileName = sanitizeFileName(fileName); // ファイル名をクリーンに
 
-            const link = document.createElement('a'); link.href = url; link.download = sanitizeFileName(fileName);
-            document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+            // ★追加・変更：スマホ・タブレット判定と共有メニューの処理
+            const file = new File([blob], fileName, { type: 'text/csv' });
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+                // スマホの場合：共有メニュー（保存・送信など）を開く
+                navigator.share({
+                    files: [file],
+                    title: fileName
+                }).catch(err => console.log('共有がキャンセルされました:', err));
+            } else {
+                // PC等の場合：従来のワンクリックで直接ダウンロード
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a'); 
+                link.href = url; 
+                link.download = fileName;
+
+                document.body.appendChild(link); 
+                link.click(); 
+                link.remove(); 
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
         }
 
         function updatePremMonthProductRankingCsvDownload(itemTotals, premiumMonth, startMonth, endMonth, itemTypeFilter, salesTypeFilter, isCountMode = false) {
