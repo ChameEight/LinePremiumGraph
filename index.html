@@ -768,18 +768,41 @@
             if (!canvas) return;
 
             if (action === 'download') {
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = canvas.toDataURL('image/png', 1.0);
-                link.click();
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+                if (!blob) return;
+                const file = new File([blob], filename, { type: 'image/png' });
+
+                // ★追加：スマホ・タブレットからのアクセスか判定する
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                // ★変更：スマホの場合のみ共有メニューを開く
+                if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: '売上グラフ'
+                        });
+                    } catch (err) {
+                        console.log('共有がキャンセルされました:', err);
+                    }
+                } else {
+                    // PC等の場合：ワンクリックで直接ダウンロード
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = url;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    URL.revokeObjectURL(url);
+                }
             } else if (action === 'copy') {
                 try {
-                    canvas.toBlob(async (blob) => {
-                        if (!blob) throw new Error('Blob creation failed');
-                        const item = new ClipboardItem({ 'image/png': blob });
-                        await navigator.clipboard.write([item]);
-                        alert('クリップボードに画像をコピーしました！\n（メモ帳やSNS等に貼り付け可能です）');
-                    }, 'image/png', 1.0);
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+                    if (!blob) throw new Error('Blob creation failed');
+                    const item = new ClipboardItem({ 'image/png': blob });
+                    await navigator.clipboard.write([item]);
+                    alert('クリップボードに画像をコピーしました！\n（メモ帳やSNS等に貼り付け可能です）');
                 } catch (err) {
                     console.error('Clipboard copy failed:', err);
                     alert('お使いのブラウザまたは環境（http等）ではクリップボードへの画像コピーが許可されていません。\n「PNG保存」をご利用ください。');
@@ -806,12 +829,34 @@
                 });
 
                 if (action === 'download') {
-                    const link = document.createElement('a');
-                    link.download = filename;
-                    link.href = canvas.toDataURL('image/png', 1.0);
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+                    if (!blob) return;
+                    const file = new File([blob], filename, { type: 'image/png' });
+
+                    // ★追加：スマホ・タブレットからのアクセスか判定する
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                    // ★変更：スマホの場合のみ共有メニューを開く
+                    if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: '売上サマリー'
+                            });
+                        } catch (err) {
+                            console.log('共有がキャンセルされました:', err);
+                        }
+                    } else {
+                        // PC等の場合：ワンクリックで直接ダウンロード
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = filename;
+                        link.href = url;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        URL.revokeObjectURL(url);
+                    }
                 } else if (action === 'copy') {
                     if (!navigator.clipboard || typeof ClipboardItem === 'undefined') {
                         alert('お使いのブラウザまたは環境では画像コピーが許可されていません。\n「PNG保存」をご利用ください。');
