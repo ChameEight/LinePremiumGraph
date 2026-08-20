@@ -1758,16 +1758,7 @@
         .map(row => row.map(escapeCSV).join(','))
         .join('\r\n');
 
-    // UTF-8 BOM付きでExcel文字化け対策
-    const blob = new Blob(
-        ["\uFEFF" + csvString],
-        { type: 'text/csv;charset=utf-8;' }
-    );
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-
-    // ファイル名
+    // ファイル名を先に決める
     let fileName = '売上サマリー.csv';
 
     if (months.length > 0) {
@@ -1778,15 +1769,37 @@
             ? `${minYYMM}_売上サマリー.csv`
             : `${minYYMM}-${maxYYMM}_売上サマリー.csv`;
     }
+    fileName = sanitizeFileName(fileName); // 既存のファイル名サニタイズ処理
 
-    link.href = url;
-    link.download = sanitizeFileName(fileName);
+    // UTF-8 BOM付きでExcel文字化け対策
+    const blob = new Blob(
+        ["\uFEFF" + csvString],
+        { type: 'text/csv;charset=utf-8;' }
+    );
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    // ★追加・変更：スマホ・タブレット判定と共有メニューの処理
+    const file = new File([blob], fileName, { type: 'text/csv' });
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+        // スマホの場合：共有メニュー（保存・送信など）を開く
+        navigator.share({
+            files: [file],
+            title: fileName
+        }).catch(err => console.log('共有がキャンセルされました:', err));
+    } else {
+        // PC等の場合：従来のワンクリックで直接ダウンロード
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
 }
 
         // --- 1つ目のグラフ描画 (データ無し商品は凡例非表示) ---
