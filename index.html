@@ -802,7 +802,27 @@
                     if (!blob) throw new Error('Blob creation failed');
                     const item = new ClipboardItem({ 'image/png': blob });
                     await navigator.clipboard.write([item]);
-                    alert('クリップボードに画像をコピーしました！\n（メモ帳やSNS等に貼り付け可能です）');
+                    const message = document.createElement('div');
+message.textContent = '✓ クリップボードに画像をコピーしました！（メモ帳やSNS等に貼り付け可能です）';
+message.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+`;
+
+document.body.appendChild(message);
+
+setTimeout(() => {
+    message.remove();
+}, 2000);
                 } catch (err) {
                     console.error('Clipboard copy failed:', err);
                     alert('お使いのブラウザまたは環境（http等）ではクリップボードへの画像コピーが許可されていません。\n「PNG保存」をご利用ください。');
@@ -866,11 +886,51 @@
                     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
                     if (!blob) throw new Error('Blob creation failed');
                     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                    alert('サマリー画像をクリップボードにコピーしました！\n（メモ帳やSNS等に貼り付け可能です）');
+                    const message = document.createElement('div');
+message.textContent = '✓ クリップボードに画像をコピーしました！（メモ帳やSNS等に貼り付け可能です）';
+message.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+`;
+
+document.body.appendChild(message);
+
+setTimeout(() => {
+    message.remove();
+}, 2000);
                 }
             } catch (err) {
                 console.error('Summary image export failed:', err);
-                alert('サマリー画像の書き出しに失敗しました。\n「PNG保存」をお試しください。');
+                const message = document.createElement('div');
+message.textContent = '✓ クリップボードに画像をコピーしました！（メモ帳やSNS等に貼り付け可能です）';
+message.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+`;
+
+document.body.appendChild(message);
+
+setTimeout(() => {
+    message.remove();
+}, 2000);
             }
         }
 
