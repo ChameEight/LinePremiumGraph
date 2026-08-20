@@ -2200,46 +2200,51 @@ setTimeout(() => {
             updateRankingCsvDownload(itemTotals, startMonth, endMonth, itemTypeFilter, salesTypeFilter, rankingCountCheckbox.checked);
 
             const rankingContainer = document.getElementById('rankingChart').parentElement;
-            rankingContainer.style.height = `${Math.max(220, Math.min(displayItems.length * 42 + 80, 1400))}px`;
+            const isCompactRanking4 = showAll4.checked;
+            // TOP5は従来どおり、全件表示時だけ1件あたりの高さを圧縮
+            const rankingRowHeight4 = isCompactRanking4 ? 24 : 42;
+            rankingContainer.style.height = `${Math.max(220, displayItems.length * rankingRowHeight4 + 80)}px`;
 
             const ctx = document.getElementById('rankingChart').getContext('2d');
             if (rankingChartInstance) rankingChartInstance.destroy();
 
             const datasets = series.map(s => ({
                 label: s.label, data: displayItems.map(item => item.totals[s.salesType][s.itemType]),
-                backgroundColor: s.color.bg, borderColor: s.color.border, borderWidth: 1, borderRadius: 4,
+                backgroundColor: s.color.bg, borderColor: s.color.border, borderWidth: 1, borderRadius: 4, barThickness: isCompactRanking4 ? 12 : undefined,
                 datalabels: { display: amountDisplay === 'detail', anchor: 'center', align: 'center', color: '#fff', font: { weight: 'bold', size: 10 }, formatter: (value) => value > 0 ? formatRankingMetric(value) : '' }
             }));
 
-            if (datasets.length > 0) datasets[datasets.length - 1].datalabels = {
-                display: context => amountDisplay === 'total' && context.datasetIndex === datasets.length - 1,
-                anchor: 'end', align: 'right', color: '#333', font: { weight: 'bold', size: 12 },
-                formatter: (value, context) => { let sum = 0; datasets.forEach(ds => sum += Number(ds.data[context.dataIndex]) || 0); return sum > 0 ? formatRankingMetric(sum) : ''; }
-            };
+            // ★ amountDisplay が 'total' の時だけ上書きするように条件を追加
+if (datasets.length > 0 && amountDisplay === 'total') {
+    datasets[datasets.length - 1].datalabels = {
+        display: context => context.datasetIndex === datasets.length - 1,
+        anchor: 'end', align: 'right', color: '#333', font: { weight: 'bold', size: 12 },
+        formatter: (value, context) => { let sum = 0; datasets.forEach(ds => sum += Number(ds.data[context.dataIndex]) || 0); return sum > 0 ? formatRankingMetric(sum) : ''; }
+    };
+}
 
             rankingChartInstance = new Chart(ctx, {
                 type: 'bar', data: { labels: displayItems.map(item => item.name), datasets: datasets },
                 options: {
                     indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 90, left: 10 } },
-                    scales: {
-                        x: { stacked: true, beginAtZero: true, grid: { display: true, color: '#f0f0f0' }, ticks: { display: amountDisplay !== 'none', callback: value => formatRankingMetric(value) } },
-                        y: {
-    stacked: true,
-    grid: { display: false },
-    ticks: {
-        font: function(context) {
-            const label = context.tick.label || '';
-            const length = String(label).length;
+                    // ... 前略 ...
+scales: {
+    x: { stacked: true, beginAtZero: true, grid: { display: true, color: '#f0f0f0' }, ticks: { display: amountDisplay !== 'none', callback: value => formatRankingMetric(value) } },
+    y: {
+        stacked: true,
+        grid: { display: false },
+        ticks: {
+            autoSkip: false, // ★ ここを追加！（自動スキップを無効化）
+            font: function(context) {
+                const label = context.tick.label || '';
+                const length = String(label).length;             
 
-            if (length >= 24) return { size: 8 };
-            if (length >= 18) return { size: 9 };
-            if (length >= 12) return { size: 10 };
-
-            return { size: 12 };
+                return { size: 12 };
+            }
         }
     }
-}
-                    },
+},
+// ... 後略 ...
                     plugins: {
                         legend: { display: true, position: 'top', labels: { boxWidth: 10, padding: 8, font: { size: 11 }, filter: (item, chartData) => chartData.datasets[item.datasetIndex].data.some(val => Number(val) > 0) } },
                         tooltip: { callbacks: {
@@ -2335,7 +2340,11 @@ setTimeout(() => {
             updatePremMonthProductRankingCsvDownload(itemTotals, premiumMonth, startMonth, endMonth, itemTypeFilter, salesTypeFilter, rankingCountCheckbox.checked);
 
             const container = document.getElementById('premMonthProductRankingChart').parentElement;
-            container.style.height = `${Math.max(220, Math.min(displayItems.length * 42 + 80, 1400))}px`;
+            const isCompactRanking6 = showAll6.checked;
+            // TOP5は従来どおり、全件表示時だけ1件あたりの高さを圧縮
+            const rankingRowHeight6 = isCompactRanking6 ? 24 : 42;
+            container.style.height = `${Math.max(220, Math.min(displayItems.length * rankingRowHeight6 + 80, 1400))}px`;
+
 
             const ctx = document.getElementById('premMonthProductRankingChart').getContext('2d');
             if (premMonthProductRankingChartInstance) premMonthProductRankingChartInstance.destroy();
@@ -2347,39 +2356,41 @@ setTimeout(() => {
 
             const datasets = series.map(s => ({
                 label: s.label, data: displayItems.map(item => item.totals[s.salesType][s.itemType]),
-                backgroundColor: s.color.bg, borderColor: s.color.border, borderWidth: 1, borderRadius: 4,
+                backgroundColor: s.color.bg, borderColor: s.color.border, borderWidth: 1, borderRadius: 4, barThickness: isCompactRanking6 ? 12 : undefined,
                 datalabels: { display: amountDisplay === 'detail', anchor: 'center', align: 'center', color: '#fff', font: { weight: 'bold', size: 10 }, formatter: value => value > 0 ? formatRankingMetric(value) : '' }
             }));
 
-            if (datasets.length > 0) datasets[datasets.length - 1].datalabels = {
-                display: context => amountDisplay === 'total' && context.datasetIndex === datasets.length - 1,
-                anchor: 'end', align: 'right', color: '#333', font: { weight: 'bold', size: 12 },
-                formatter: (value, context) => { let sum = 0; datasets.forEach(ds => sum += Number(ds.data[context.dataIndex]) || 0); return sum > 0 ? formatRankingMetric(sum) : ''; }
-            };
+            // ★ amountDisplay が 'total' の時だけ上書きするように条件を追加
+if (datasets.length > 0 && amountDisplay === 'total') {
+    datasets[datasets.length - 1].datalabels = {
+        display: context => context.datasetIndex === datasets.length - 1,
+        anchor: 'end', align: 'right', color: '#333', font: { weight: 'bold', size: 12 },
+        formatter: (value, context) => { let sum = 0; datasets.forEach(ds => sum += Number(ds.data[context.dataIndex]) || 0); return sum > 0 ? formatRankingMetric(sum) : ''; }
+    };
+}
 
             premMonthProductRankingChartInstance = new Chart(ctx, {
                 type: 'bar', data: { labels: displayItems.map(item => item.name), datasets },
                 options: {
                     indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 90, left: 10 } },
-                    scales: {
-                        x: { stacked: true, beginAtZero: true, grid: { display: true, color: '#f0f0f0' }, ticks: { display: amountDisplay !== 'none', callback: value => formatRankingMetric(value) } },
-                        y: {
-    stacked: true,
-    grid: { display: false },
-    ticks: {
-        font: function(context) {
-            const label = context.tick.label || '';
-            const length = String(label).length;
+                    // ... 前略 ...
+scales: {
+    x: { stacked: true, beginAtZero: true, grid: { display: true, color: '#f0f0f0' }, ticks: { display: amountDisplay !== 'none', callback: value => formatRankingMetric(value) } },
+    y: {
+        stacked: true,
+        grid: { display: false },
+        ticks: {
+            autoSkip: false, // ★ ここを追加！（自動スキップを無効化）
+            font: function(context) {
+                const label = context.tick.label || '';
+                const length = String(label).length;                
 
-            if (length >= 24) return { size: 8 };
-            if (length >= 18) return { size: 9 };
-            if (length >= 12) return { size: 10 };
-
-            return { size: 12 };
+                return { size: 12 };
+            }
         }
     }
-}
-                    },
+},
+// ... 後略 ...
                     plugins: {
                         legend: { display: true, position: 'top', labels: { boxWidth: 12, padding: 12, filter: (item, chartData) => chartData.datasets[item.datasetIndex].data.some(val => val > 0) } },
                         tooltip: { callbacks: { label: context => context.dataset.label + ': ' + formatRankingMetric(context.parsed.x), footer: items => '合計: ' + formatRankingMetric(items.reduce((sum, item) => sum + (Number(item.parsed.x) || 0), 0)) } }
@@ -2455,8 +2466,11 @@ setTimeout(() => {
 
             updatePremRankingCsvDownload(premMonthTotals, startMonth, endMonth, itemTypeFilter, salesTypeFilter, rankingCountCheckbox.checked);
 
-            const premRankingContainer = document.getElementById('premMonthRankingChart').parentElement;
-            premRankingContainer.style.height = `${Math.max(220, Math.min(displayItems.length * 42 + 80, 1400))}px`;
+            const container = document.getElementById('premMonthRankingChart').parentElement;
+            const isCompactRanking5 = showAll5.checked;
+            // TOP5は従来どおり、全件表示時だけ1件あたりの高さを圧縮
+            const rankingRowHeight5 = isCompactRanking5 ? 24 : 42;
+            container.style.height = `${Math.max(220, Math.min(displayItems.length * rankingRowHeight5 + 80, 1400))}px`;
 
             const ctx = document.getElementById('premMonthRankingChart').getContext('2d');
             if (premMonthRankingChartInstance) premMonthRankingChartInstance.destroy();
@@ -2465,41 +2479,42 @@ setTimeout(() => {
             const currentColorConfig = chart3ColorsMap[itemTypeFilter];
 
             if (salesTypeFilter === 'all' || salesTypeFilter === 'individual') {
-                datasets.push({ label: rankingCountCheckbox.checked ? '個別個数' : '個別売上', data: displayItems.map(item => item.effectiveInd), backgroundColor: currentColorConfig.individual.bg, borderColor: currentColorConfig.individual.border, borderWidth: 1, borderRadius: 4, datalabels: { display: amountDisplay === 'detail', anchor: 'center', align: 'center', color: '#fff', font: { weight: 'bold', size: 10 }, formatter: (value) => value > 0 ? formatRankingMetric(value) : '' } });
+                datasets.push({ label: rankingCountCheckbox.checked ? '個別個数' : '個別売上', data: displayItems.map(item => item.effectiveInd), backgroundColor: currentColorConfig.individual.bg, borderColor: currentColorConfig.individual.border, borderWidth: 1, borderRadius: 4, barThickness: isCompactRanking5 ? 12 : undefined, datalabels: { display: amountDisplay === 'detail', anchor: 'center', align: 'center', color: '#fff', font: { weight: 'bold', size: 10 }, formatter: (value) => value > 0 ? formatRankingMetric(value) : '' } });
             }
             if (salesTypeFilter === 'all' || salesTypeFilter === 'premium') {
-                datasets.push({ label: rankingCountCheckbox.checked ? 'プレミアム個数' : 'プレミアム売上', data: displayItems.map(item => item.effectivePrem), backgroundColor: currentColorConfig.premium.bg, borderColor: currentColorConfig.premium.border, borderWidth: 1, borderRadius: 4, datalabels: { display: amountDisplay === 'detail', anchor: 'center', align: 'center', color: '#fff', font: { weight: 'bold', size: 10 }, formatter: (value) => value > 0 ? formatRankingMetric(value) : '' } });
+                datasets.push({ label: rankingCountCheckbox.checked ? 'プレミアム個数' : 'プレミアム売上', data: displayItems.map(item => item.effectivePrem), backgroundColor: currentColorConfig.premium.bg, borderColor: currentColorConfig.premium.border, borderWidth: 1, borderRadius: 4, barThickness: isCompactRanking5 ? 12 : undefined, datalabels: { display: amountDisplay === 'detail', anchor: 'center', align: 'center', color: '#fff', font: { weight: 'bold', size: 10 }, formatter: (value) => value > 0 ? formatRankingMetric(value) : '' } });
             }
 
-            if (datasets.length > 0) datasets[datasets.length - 1].datalabels = {
-                display: context => amountDisplay === 'total' && context.datasetIndex === datasets.length - 1,
-                anchor: 'end', align: 'right', color: '#333', font: { weight: 'bold', size: 12 },
-                formatter: (value, context) => { let sum = 0; datasets.forEach(ds => sum += Number(ds.data[context.dataIndex]) || 0); return sum > 0 ? formatRankingMetric(sum) : ''; }
-            };
-
+            // ★ amountDisplay が 'total' の時だけ上書きするように条件を追加
+if (datasets.length > 0 && amountDisplay === 'total') {
+    datasets[datasets.length - 1].datalabels = {
+        display: context => context.datasetIndex === datasets.length - 1,
+        anchor: 'end', align: 'right', color: '#333', font: { weight: 'bold', size: 12 },
+        formatter: (value, context) => { let sum = 0; datasets.forEach(ds => sum += Number(ds.data[context.dataIndex]) || 0); return sum > 0 ? formatRankingMetric(sum) : ''; }
+    };
+}
             premMonthRankingChartInstance = new Chart(ctx, {
                 type: 'bar', data: { labels: labels, datasets: datasets },
                 options: {
                     indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 90, left: 10 } },
-                    scales: {
-                        x: { stacked: true, beginAtZero: true, grid: { display: true, color: '#f0f0f0' }, ticks: { display: amountDisplay !== 'none', callback: value => formatRankingMetric(value) } },
-                       y: {
-    stacked: true,
-    grid: { display: false },
-    ticks: {
-        font: function(context) {
-            const label = context.tick.label || '';
-            const length = String(label).length;
+                   // ... 前略 ...
+scales: {
+    x: { stacked: true, beginAtZero: true, grid: { display: true, color: '#f0f0f0' }, ticks: { display: amountDisplay !== 'none', callback: value => formatRankingMetric(value) } },
+    y: {
+        stacked: true,
+        grid: { display: false },
+        ticks: {
+            autoSkip: false, // ★ ここを追加！（自動スキップを無効化）
+            font: function(context) {
+                const label = context.tick.label || '';
+                const length = String(label).length;                
 
-            if (length >= 24) return { size: 8 };
-            if (length >= 18) return { size: 9 };
-            if (length >= 12) return { size: 10 };
-
-            return { size: 12 };
+                return { size: 12 };
+            }
         }
     }
-}
-                    },
+},
+// ... 後略 ...
                     plugins: {
                         legend: { display: true, position: 'top', labels: { boxWidth: 12, padding: 12 } },
                         tooltip: { callbacks: { label: context => context.dataset.label + ': ' + formatRankingMetric(context.parsed.x), footer: items => '合計: ' + formatRankingMetric(items.reduce((sum, item) => sum + (Number(item.parsed.x) || 0), 0)) } }
