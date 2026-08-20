@@ -2265,6 +2265,10 @@ scales: {
             },
             font: function() {
                 return { size: 10 };
+            },
+            afterFit: function(scale) {
+                // ランキング項目名の表示領域を現在の約1.5倍に確保
+                scale.width = Math.round(scale.width * 1.5);
             }
         }
     }
@@ -2411,6 +2415,10 @@ scales: {
             },
             font: function() {
                 return { size: 10 };
+            },
+            afterFit: function(scale) {
+                // ランキング項目名の表示領域を現在の約1.5倍に確保
+                scale.width = Math.round(scale.width * 1.5);
             }
         }
     }
@@ -2535,6 +2543,10 @@ scales: {
             },
             font: function() {
                 return { size: 10 };
+            },
+            afterFit: function(scale) {
+                // ランキング項目名の表示領域を現在の約1.5倍に確保
+                scale.width = Math.round(scale.width * 1.5);
             }
         }
     }
