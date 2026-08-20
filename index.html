@@ -2606,8 +2606,22 @@
                 // --- ダウンロードCSVの作成 ---
                 const mergedCsvString = Papa.unparse([header, ...mergedData]);
                 const blobMerged = new Blob(["\uFEFF" + mergedCsvString], { type: 'text/csv;charset=utf-8;' });
+                
+                // ★追加・変更：スマホ用のFileオブジェクトを作成し、クリック時の動作を上書き
+                const fileMerged = new File([blobMerged], outputFileName, { type: 'text/csv' });
                 downloadBtnMerged.href = URL.createObjectURL(blobMerged);
                 downloadBtnMerged.download = outputFileName;
+                downloadBtnMerged.onclick = async (e) => {
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    if (isMobile && navigator.canShare && navigator.canShare({ files: [fileMerged] })) {
+                        e.preventDefault(); // PC向けの通常のダウンロードを一旦ストップ
+                        try {
+                            await navigator.share({ files: [fileMerged], title: outputFileName });
+                        } catch (err) {
+                            console.log('共有がキャンセルされました:', err);
+                        }
+                    }
+                };
 
                 if (isAlternativeMode) {
                     const generatedPremHeader = ["英語名", "日本語名", "LINEスタンプURL", "プレミアム開始日", "販売開始日"];
@@ -2618,8 +2632,22 @@
                     }
                     const generatedPremCsvString = Papa.unparse([generatedPremHeader, ...generatedPremRows]);
                     const blobPrem = new Blob(["\uFEFF" + generatedPremCsvString], { type: 'text/csv;charset=utf-8;' });
+                    
+                    // ★追加・変更：こちらも同様にスマホ対応
+                    const filePrem = new File([blobPrem], "generated_premium.csv", { type: 'text/csv' });
                     downloadBtnPremium.href = URL.createObjectURL(blobPrem);
                     downloadBtnPremium.download = "generated_premium.csv";
+                    downloadBtnPremium.onclick = async (e) => {
+                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                        if (isMobile && navigator.canShare && navigator.canShare({ files: [filePrem] })) {
+                            e.preventDefault(); // PC向けの通常のダウンロードを一旦ストップ
+                            try {
+                                await navigator.share({ files: [filePrem], title: "generated_premium.csv" });
+                            } catch (err) {
+                                console.log('共有がキャンセルされました:', err);
+                            }
+                        }
+                    };
                     downloadBtnPremium.style.display = "inline-flex";
                 } else {
                     downloadBtnPremium.style.display = "none";
