@@ -1219,6 +1219,14 @@ setTimeout(() => {
         showAll5.addEventListener('change', () => { if (Object.keys(premMonthRankingDataObj).length > 0) drawPremMonthRankingChart(); });
         showAll6.addEventListener('change', () => { if (Object.keys(rankingDataObj).length > 0 && rankingPremiumMonthSelect.value) drawPremMonthProductRankingChart(); });
 
+        let rankingResizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(rankingResizeTimer);
+            rankingResizeTimer = setTimeout(() => {
+                redrawRankingAnalysis();
+            }, 120);
+        });
+
         rankingStartMonthSelect.addEventListener('change', handleRankingPeriodChange);
         rankingEndMonthSelect.addEventListener('change', handleRankingPeriodChange);
         rankingPremiumMonthSelect.addEventListener('change', () => {
@@ -2152,6 +2160,23 @@ setTimeout(() => {
             document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
+        // ランキング用：スマホでは商品名・月名ラベルを画面幅に応じて省略表示
+        function getRankingLabelCharLimit() {
+            const width = window.innerWidth;
+            if (width <= 360) return 8;
+            if (width <= 430) return 9;
+            return 10;
+        }
+
+        function formatRankingAxisLabel(label) {
+            const text = String(label ?? '');
+            // PC・タブレットでは全文表示
+            if (window.innerWidth > 560) return text;
+
+            const maxChars = getRankingLabelCharLimit();
+            return text.length > maxChars ? text.slice(0, maxChars) + '…' : text;
+        }
+
         function updateRankingCsvDownload(itemTotals, startMonth, endMonth, itemTypeFilter, salesTypeFilter, isCountMode = false) {
             currentRankingExport = { itemTotals, startMonth, endMonth, itemTypeFilter, salesTypeFilter, isCountMode };
             rankingCsvDownload.style.display = 'inline-flex';
@@ -2234,12 +2259,12 @@ scales: {
         stacked: true,
         grid: { display: false },
         ticks: {
-            autoSkip: false, // ★ ここを追加！（自動スキップを無効化）
-            font: function(context) {
-                const label = context.tick.label || '';
-                const length = String(label).length;             
-
-                return { size: 12 };
+            autoSkip: false,
+            callback: function(value) {
+                return formatRankingAxisLabel(this.getLabelForValue(value));
+            },
+            font: function() {
+                return { size: 10 };
             }
         }
     }
@@ -2380,12 +2405,12 @@ scales: {
         stacked: true,
         grid: { display: false },
         ticks: {
-            autoSkip: false, // ★ ここを追加！（自動スキップを無効化）
-            font: function(context) {
-                const label = context.tick.label || '';
-                const length = String(label).length;                
-
-                return { size: 12 };
+            autoSkip: false,
+            callback: function(value) {
+                return formatRankingAxisLabel(this.getLabelForValue(value));
+            },
+            font: function() {
+                return { size: 10 };
             }
         }
     }
@@ -2504,12 +2529,12 @@ scales: {
         stacked: true,
         grid: { display: false },
         ticks: {
-            autoSkip: false, // ★ ここを追加！（自動スキップを無効化）
-            font: function(context) {
-                const label = context.tick.label || '';
-                const length = String(label).length;                
-
-                return { size: 12 };
+            autoSkip: false,
+            callback: function(value) {
+                return formatRankingAxisLabel(this.getLabelForValue(value));
+            },
+            font: function() {
+                return { size: 10 };
             }
         }
     }
